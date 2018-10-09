@@ -44,11 +44,7 @@ resource "aws_autoscaling_notification" "wp-aws-ASG-notifications" {
     "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
   ]
 
-  topic_arn = "${aws_sns_topic.wp-aws-sns.arn}"
-}
-
-resource "aws_sns_topic" "wp-aws-sns" {
-  name = "${var.sns_topic_name}"
+  topic_arn = "${var.sns_topic_arn}"
 }
 
 # Create autoscaling policy -> target at a 70% average CPU load

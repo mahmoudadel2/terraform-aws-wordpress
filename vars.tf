@@ -14,7 +14,7 @@ variable iam_instance_profile {
   default = ""
 }
 
-variable "sns_topic_name" {
+variable "sns_topic_arn" {
   default = ""
 }
 
