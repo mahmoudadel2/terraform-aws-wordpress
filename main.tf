@@ -32,6 +32,25 @@ resource "aws_instance" "wp-aws-mysql" {
   }
 }
 
+
+resource "aws_autoscaling_notification" "wp-aws-ASG-notifications" {
+  group_names = [
+    "${aws_autoscaling_group.wp-aws-asg.name}",
+  ]
+
+  notifications = [
+    "autoscaling:EC2_INSTANCE_LAUNCH",
+    "autoscaling:EC2_INSTANCE_TERMINATE",
+    "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+  ]
+
+  topic_arn = "${aws_sns_topic.wp-aws-sns.arn}"
+}
+
+resource "aws_sns_topic" "wp-aws-sns" {
+  name = "${var.sns_topic_name}"
+}
+
 # Create autoscaling policy -> target at a 70% average CPU load
 resource "aws_autoscaling_policy" "wp-aws-asg-policy-1" {
   name                   = "wp-aws-asg-policy"
@@ -43,7 +62,7 @@ resource "aws_autoscaling_policy" "wp-aws-asg-policy-1" {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
-    target_value = 70.0
+    target_value = 25.0
   }
 }
 
@@ -103,14 +122,14 @@ resource "aws_elb" "wp-aws-elb" {
     unhealthy_threshold = 2
     timeout = 3
     interval = 30
-    target = "TCP:${var.server_port}"
+    target = "TCP:${var.http_port}"
   }
 
   # This adds a listener for incoming HTTP requests.
   listener {
     lb_port = 80
     lb_protocol = "http"
-    instance_port = "${var.server_port}"
+    instance_port = "${var.http_port}"
     instance_protocol = "http"
   }
 }
@@ -129,8 +148,8 @@ resource "aws_security_group" "wp-aws-lc-sg" {
 
   # Inbound HTTP from anywhere
   ingress {
-    from_port = "${var.server_port}"
-    to_port = "${var.server_port}"
+    from_port = "${var.http_port}"
+    to_port = "${var.http_port}"
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -175,8 +194,8 @@ resource "aws_security_group" "wp-aws-elb-sg" {
 
   # Inbound HTTP from anywhere
   ingress {
-    from_port = "${var.server_port}"
-    to_port = "${var.server_port}"
+    from_port = "${var.http_port}"
+    to_port = "${var.http_port}"
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

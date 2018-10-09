@@ -10,13 +10,15 @@ variable region {
 variable key_name {
   default = ""
 }
-
 variable iam_instance_profile {
-  default = "t2.nano"
+  default = ""
 }
 
-variable "server_port" {
-  description = "The port the server will use for HTTP requests"
+variable "sns_topic_name" {
+  default = ""
+}
+
+variable "http_port" {
   default = 80
 }
 
@@ -26,9 +28,4 @@ variable "ssh_port" {
 
 variable "mysql_port" {
   default = 3306
-}
-
-variable "count" {
-  description = "Number of EC2 instances"
-  default = 1
 }
