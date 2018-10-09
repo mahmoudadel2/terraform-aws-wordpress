@@ -74,7 +74,6 @@ resource "aws_launch_configuration" "wp-aws-lc" {
   key_name = "${var.key_name}"
   security_groups = ["${aws_security_group.wp-aws-lc-sg.id}"]
 
-
   user_data = <<-EOF
               #!/bin/bash
               sudo yum update -y
@@ -104,8 +103,7 @@ resource "aws_elb" "wp-aws-elb" {
     unhealthy_threshold = 2
     timeout = 3
     interval = 30
-    #target = "TCP:${var.server_port}"
-    target = "HTTP:${var.server_port}/index.html"
+    target = "TCP:${var.server_port}"
   }
 
   # This adds a listener for incoming HTTP requests.
@@ -115,6 +113,14 @@ resource "aws_elb" "wp-aws-elb" {
     instance_port = "${var.server_port}"
     instance_protocol = "http"
   }
+}
+
+# Create sticky session for WP
+resource "aws_lb_cookie_stickiness_policy" "wp-aws-sticky-session" {
+  name                     = "wp-aws-sticky-session"
+  load_balancer            = "${aws_elb.wp-aws-elb.id}"
+  lb_port                  = 80
+  cookie_expiration_period = 600
 }
 
 # Create security group that's applied the launch configuration
