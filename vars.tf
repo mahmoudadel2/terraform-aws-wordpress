@@ -1,9 +1,19 @@
-variable access_key {}
-variable secret_key {}
-variable region {}
-variable key_name {}
-variable s3_bucket {}
-variable iam_instance_profile {}
+variable access_key {
+  default = ""
+}
+variable secret_key {
+  default = ""
+}
+variable region {
+  default = ""
+}
+variable key_name {
+  default = ""
+}
+
+variable iam_instance_profile {
+  default = "t2.nano"
+}
 
 variable "server_port" {
   description = "The port the server will use for HTTP requests"
@@ -12,6 +22,10 @@ variable "server_port" {
 
 variable "ssh_port" {
   default = 22
+}
+
+variable "mysql_port" {
+  default = 3306
 }
 
 variable "count" {
