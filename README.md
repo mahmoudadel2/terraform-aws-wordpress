@@ -1,4 +1,4 @@
-# Dynamically scalable Wordpress setup using Terraform, AWS, Docker
+# Dynamically scalable Wordpress setup using Terraform, AWS, Docker + ELK stack
 
 
 How to use?

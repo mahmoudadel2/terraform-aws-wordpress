@@ -17,21 +17,57 @@ resource "aws_instance" "wp-aws-mysql" {
   user_data = <<-EOF
               #!/bin/bash
               sudo yum update -y
-              sudo yum install docker -y
+              sudo yum install docker curl -y
               sudo service docker start
               sudo chkconfig docker on
               mkdir -p /var/lib/mysql/
               docker run --name wp-aws-mysql \
               -v /var/lib/mysql:/var/lib/mysql \
+              -v /var/log/mysql:/var/log/mysql \
               -e MYSQL_ROOT_PASSWORD=root \
               -p 3306:3306 \
               -d mysql:5.7
+              curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.4.2-x86_64.rpm
+              sudo rpm -vi filebeat-6.4.2-x86_64.rpm
+              echo 'filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/mysql/*
+    - /var/log/*.log
+output.logstash:
+  hosts: ["${aws_instance.wp-aws-elk.private_ip}:5044"]' > /etc/filebeat/filebeat.yml
+              sudo service filebeat restart
+              sudo chkconfig filebeat on
               EOF
   tags {
     Name = "wp-aws-mysql"
   }
 }
 
+# Single elk node
+resource "aws_instance" "wp-aws-elk" {
+  ami = "ami-5652ce39"
+  instance_type = "t2.medium"
+  key_name = "${var.key_name}"
+  vpc_security_group_ids = ["${aws_security_group.wp-aws-lc-sg.id}"]
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo yum update -y
+              sudo yum install docker curl git -y
+              sudo service docker start
+              sudo chkconfig docker on
+              sudo curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              cd /srv
+              git clone https://github.com/mahmoudadel2/docker-elk.git
+              cd docker-elk/
+              /usr/local/bin/docker-compose up -d
+              EOF
+  tags {
+    Name = "wp-aws-elk"
+  }
+}
 
 resource "aws_autoscaling_notification" "wp-aws-ASG-notifications" {
   group_names = [
@@ -160,6 +196,20 @@ resource "aws_security_group" "wp-aws-lc-sg" {
   ingress {
     from_port = "${var.mysql_port}"
     to_port = "${var.mysql_port}"
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port = "${var.kibana_port}"
+    to_port = "${var.kibana_port}"
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port = "${var.logstash_port}"
+    to_port = "${var.logstash_port}"
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

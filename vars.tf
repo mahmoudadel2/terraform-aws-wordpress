@@ -29,3 +29,11 @@ variable "ssh_port" {
 variable "mysql_port" {
   default = 3306
 }
+
+variable "kibana_port" {
+  default = 5601
+}
+
+variable "logstash_port" {
+  default = 5044
+}
