@@ -5,5 +5,5 @@ output "elb_dns_name" {
 }
 
 output "kibana_url" {
-  value = "http://${aws_instance.wp-aws-elk.public_ip}:${var.kibana_port}"
+  value = "http://${aws_instance.wp-aws-elk.public_dns}:${var.kibana_port}"
 }
